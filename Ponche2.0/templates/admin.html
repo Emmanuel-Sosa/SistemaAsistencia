@@ -4,11 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - Asistencia</title>
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Estilos avanzados para Modo Oscuro en Tablas y Elementos -->
+<style>
+    body.dark-mode {
+        background-color: #121212 !important;
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode .card,
+    body.dark-mode .modal-content,
+    body.dark-mode .list-group-item {
+        background-color: #1e1e1e !important;
+        color: #e0e0e0 !important;
+        border-color: #2c2c2c !important;
+    }
+    body.dark-mode .card-header,
+    body.dark-mode .modal-header {
+        background-color: #252525 !important;
+        color: #ffffff !important;
+        border-bottom: 1px solid #2c2c2c !important;
+    }
+    body.dark-mode .modal-footer {
+        background-color: #1e1e1e !important;
+        border-top: 1px solid #2c2c2c !important;
+    }
+    body.dark-mode .navbar {
+        background-color: #1e1e1e !important;
+        border-bottom: 1px solid #2c2c2c !important;
+    }
+    body.dark-mode .navbar-brand, 
+    body.dark-mode .text-dark,
+    body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
+    body.dark-mode h4, body.dark-mode h5, body.dark-mode h6,
+    body.dark-mode span, body.dark-mode strong {
+        color: #f8f9fa !important;
+    }
+    body.dark-mode .text-muted {
+        color: #b0b0b0 !important;
+    }
+
+    /* CORRECCIÓN DE BOTONES OUTLINE (Como el botón de Configuración Admin) */
+    body.dark-mode .btn-outline-dark,
+    body.dark-mode .btn-outline-secondary {
+        color: #f8f9fa !important;
+        border-color: #777 !important;
+    }
+    body.dark-mode .btn-outline-dark:hover,
+    body.dark-mode .btn-outline-secondary:hover {
+        background-color: #333 !important;
+        color: #ffffff !important;
+        border-color: #aaa !important;
+    }
+
+    /* Tablas */
+    body.dark-mode .table {
+        color: #e0e0e0 !important;
+        border-color: #2c2c2c !important;
+    }
+    body.dark-mode .table th,
+    body.dark-mode .table td {
+        color: #e0e0e0 !important;
+        background-color: transparent !important;
+        border-color: #2c2c2c !important;
+    }
+    body.dark-mode .table-light,
+    body.dark-mode .table-light th,
+    body.dark-mode .table-light td {
+        background-color: #252525 !important;
+        color: #ffffff !important;
+        border-color: #2c2c2c !important;
+    }
+    body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > * {
+        background-color: rgba(255, 255, 255, 0.04) !important;
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode .table-hover > tbody > tr:hover > * {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        color: #ffffff !important;
+    }
+
+    /* Formularios y Placeholders */
+    body.dark-mode .form-control {
+        background-color: #2a2a2a !important;
+        color: #ffffff !important;
+        border-color: #444 !important;
+    }
+    body.dark-mode .form-control::placeholder {
+        color: #888888 !important;
+        opacity: 1;
+    }
+    body.dark-mode .form-control:focus {
+        background-color: #2a2a2a !important;
+        color: #ffffff !important;
+        border-color: #0d6efd !important;
+    }
+
+    /* Menús desplegables */
+    body.dark-mode .dropdown-menu {
+        background-color: #1e1e1e !important;
+        border: 1px solid #2c2c2c !important;
+    }
+    body.dark-mode .dropdown-item {
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode .dropdown-item:hover {
+        background-color: #2a2a2a !important;
+        color: #ffffff !important;
+    }
+    body.dark-mode .dropdown-divider {
+        border-color: #2c2c2c !important;
+    }
+    body.dark-mode .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+</style>
 </head>
 <body class="bg-light">
 
-    <!-- Navbar Limpia sin fondo negro -->
+    <!-- Navbar Limpia -->
     <nav class="navbar shadow-sm bg-white py-3 mb-4">
         <div class="container-fluid px-4">
             <span class="navbar-brand mb-0 h1 fw-bold text-dark">🏢 Panel de Administración | Control de Asistencia</span>
@@ -21,6 +135,7 @@
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                     <li><a class="dropdown-item py-2" href="/">📍 Ir al Registro de Llegada</a></li>
                     <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2" href="#" id="btnToggleTheme">🌙 Cambiar a Modo Oscuro</a></li>
                     <li><a class="dropdown-item py-2" href="#" data-bs-toggle="modal" data-bs-target="#modalPassword">🔑 Cambiar Contraseña</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item py-2 text-danger fw-bold" href="/admin/logout">🚪 Salir / Cerrar Sesión</a></li>
@@ -191,7 +306,30 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Script para Modo Oscuro y Cambio de Contraseña -->
     <script>
+        const currentTheme = localStorage.getItem('theme');
+        const btnToggleTheme = document.getElementById('btnToggleTheme');
+
+        if (currentTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            btnToggleTheme.innerHTML = '☀️ Cambiar a Modo Claro';
+        }
+
+        btnToggleTheme.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.toggle('dark-mode');
+            
+            let theme = 'light';
+            if (document.body.classList.contains('dark-mode')) {
+                theme = 'dark';
+                btnToggleTheme.innerHTML = '☀️ Cambiar a Modo Claro';
+            } else {
+                btnToggleTheme.innerHTML = '🌙 Cambiar a Modo Oscuro';
+            }
+            localStorage.setItem('theme', theme);
+        });
+
         document.getElementById('formCambiarPassword').addEventListener('submit', async function(e) {
             e.preventDefault();
             const actual = document.getElementById('passActual').value;
@@ -220,6 +358,11 @@
             }
         });
     </script>
+    <script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-mode');
+    }
+</script>
 
 </body>
 </html>
