@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Asistencia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+    <!-- Navbar Limpia sin fondo negro -->
+    <nav class="navbar shadow-sm bg-white py-3 mb-4">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand mb-0 h1 fw-bold text-dark">🏢 Panel de Administración | Control de Asistencia</span>
+            
+            <!-- Menú Desplegable de Configuración del Administrador -->
+            <div class="dropdown">
+                <button class="btn btn-outline-dark btn-sm dropdown-toggle px-3 py-2 fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    ⚙️ Configuración Admin
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                    <li><a class="dropdown-item py-2" href="/">📍 Ir al Registro de Llegada</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2" href="#" data-bs-toggle="modal" data-bs-target="#modalPassword">🔑 Cambiar Contraseña</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item py-2 text-danger fw-bold" href="/admin/logout">🚪 Salir / Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        
+        <!-- Tarjetas de Estadísticas Globales -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Promedio General (Empresa)</h5>
+                        <h2 class="display-6 fw-bold">{{ promedio_horas }} hrs</h2>
+                        <p class="mb-0 text-white-50">Por jornada completada</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Empleados Activos Hoy</h5>
+                        <h2 class="display-6 fw-bold">{{ activos | length }} / {{ total_empleados }}</h2>
+                        <p class="mb-0 text-white-50">Trabajando actualmente</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Layout Principal en Dos Columnas -->
+        <div class="row g-4">
+            
+            <!-- COLUMNA IZQUIERDA: Listado de Empleados y Activos -->
+            <div class="col-lg-4">
+                
+                <!-- Listado de Empleados con el botón de nuevo empleado -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center py-3">
+                        <span>👥 Empleados y Perfiles</span>
+                        <a href="/admin/empleado/nuevo" class="btn btn-primary btn-sm">+ Registrar Empleado</a>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if empleados %}
+                            <div class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;">
+                                {% for emp in empleados %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">{{ emp.nombre }}</h6>
+                                        <small class="text-muted">Cód: <code>{{ emp.codigo }}</code></small>
+                                    </div>
+                                    <a href="/admin/empleado/{{ emp.id }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="p-3">
+                                <p class="text-muted mb-0 small">No hay empleados registrados.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Empleados Activos -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold py-3">🟢 Activos en este Momento</div>
+                    <div class="card-body">
+                        {% if activos %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th class="text-end">Llegada</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for act in activos %}
+                                        <tr>
+                                            <td>{{ act.nombre }}</td>
+                                            <td class="text-end"><span class="badge bg-success">{{ act.hora_llegada }}</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0 small">No hay empleados activos ahora.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: Historial Reciente de Ponches -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center py-3">
+                        <span>📋 Historial Reciente de Ponches</span>
+                        <span class="badge bg-secondary">Últimos registros</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>Código</th>
+                                        <th>Empleado</th>
+                                        <th>Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for h in historial %}
+                                    <tr>
+                                        <td>{{ h.fecha_hora }}</td>
+                                        <td><code>{{ h.codigo }}</code></td>
+                                        <td>{{ h.nombre }}</td>
+                                        <td>
+                                            {% if h.tipo == 'ENTRADA' %}
+                                                <span class="badge bg-primary">ENTRADA</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">SALIDA</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL PARA CAMBIAR CONTRASEÑA -->
+    <div class="modal fade" id="modalPassword" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-white border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">🔑 Cambiar Contraseña de Administrador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formCambiarPassword">
+                        <div class="mb-3">
+                            <label for="passActual" class="form-label small fw-bold text-muted">Contraseña Actual</label>
+                            <input type="password" class="form-control py-2" id="passActual" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="passNueva" class="form-label small fw-bold text-muted">Nueva Contraseña</label>
+                            <input type="password" class="form-control py-2" id="passNueva" required>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary py-2 fw-bold">Actualizar Contraseña</button>
+                        </div>
+                    </form>
+                    <div id="alertaPassword" class="mt-3 text-center small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.getElementById('formCambiarPassword').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const actual = document.getElementById('passActual').value;
+            const nueva = document.getElementById('passNueva').value;
+            const alerta = document.getElementById('alertaPassword');
+
+            try {
+                const response = await fetch('/api/cambiar-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ actual, nueva })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alerta.innerHTML = `<span class="text-success fw-bold">${data.mensaje}</span>`;
+                    document.getElementById('formCambiarPassword').reset();
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1200);
+                } else {
+                    alerta.innerHTML = `<span class="text-danger fw-bold">${data.error}</span>`;
+                }
+            } catch (err) {
+                alerta.innerHTML = `<span class="text-danger fw-bold">Error de conexión.</span>`;
+            }
+        });
+    </script>
+
+</body>
+</html>

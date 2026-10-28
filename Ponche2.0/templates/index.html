@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Asistencia - Ponche</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex flex-column vh-100">
+
+    <!-- Barra Superior -->
+    <nav class="navbar shadow-sm bg-white py-3">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <span class="navbar-brand mb-0 h1 fw-bold text-dark">⏰ Control de Asistencia</span>
+            <button class="btn btn-primary btn-sm px-3 py-2 fw-semibold" data-bs-toggle="modal" data-bs-target="#modalAdminLogin">
+                Administrador
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal del Ponchador (Movido un poco más hacia arriba con pt-4 pb-5) -->
+    <div class="container d-flex flex-column align-items-center justify-content-start flex-grow-1 pt-5">
+        <div class="card shadow-lg border-0 p-5 text-center mx-auto mt-4" style="width: 100%; max-width: 480px; border-radius: 1rem;">
+            <h3 class="fw-bold mb-2">Registrar Ponche</h3>
+            <p class="text-muted small mb-4">Escanee su código QR o ingrese su código.</p>
+
+            <form id="formPonche">
+                <div class="mb-3">
+                    <input type="text" class="form-control form-control-lg text-center py-3" id="codigo" placeholder="Ingrese su código..." autocomplete="off" required autofocus style="font-size: 1.25rem;">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Registrar</button>
+            </form>
+
+            <div id="resultadoPonche" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN ADMIN -->
+    <div class="modal fade" id="modalAdminLogin" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-white border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold">🔐 Acceso de Administrador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="formLoginAdmin">
+                        <div class="mb-3">
+                            <label for="adminPass" class="form-label small fw-bold text-muted">Contraseña</label>
+                            <input type="password" class="form-control py-2" id="adminPass" placeholder="Ingrese la contraseña" required>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary py-2 fw-bold">Entrar al Panel</button>
+                        </div>
+                    </form>
+                    <div id="alertaLogin" class="mt-3 text-center small"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script del Ponche y Login Admin -->
+    <script>
+        document.getElementById('formPonche').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const codigo = document.getElementById('codigo').value.trim();
+            const resDiv = document.getElementById('resultadoPonche');
+
+            try {
+                const response = await fetch('/api/ponchar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ codigo })
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    resDiv.innerHTML = `
+                        <div class="alert alert-success py-3 mb-0 shadow-sm">
+                            <h5 class="fw-bold mb-1">${data.empleado}</h5>
+                            <span class="badge bg-success fs-6">${data.tipo}</span> registrada a las ${data.hora}
+                        </div>
+                    `;
+                } else {
+                    resDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0 shadow-sm">${data.error}</div>`;
+                }
+                document.getElementById('codigo').value = '';
+            } catch (err) {
+                resDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0 shadow-sm">Error de conexión.</div>`;
+            }
+        });
+
+        document.getElementById('formLoginAdmin').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const password = document.getElementById('adminPass').value;
+            const alerta = document.getElementById('alertaLogin');
+
+            try {
+                const response = await fetch('/admin/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+
+                if (response.ok) {
+                    alerta.innerHTML = `<span class="text-success fw-bold">¡Acceso concedido! Redirigiendo...</span>`;
+                    setTimeout(() => {
+                        window.location.href = '/admin';
+                    }, 800);
+                } else {
+                    alerta.innerHTML = `<span class="text-danger fw-bold">Contraseña incorrecta.</span>`;
+                }
+            } catch (err) {
+                alerta.innerHTML = `<span class="text-danger fw-bold">Error de conexión.</span>`;
+            }
+        });
+    </script>
+</body>
+</html>

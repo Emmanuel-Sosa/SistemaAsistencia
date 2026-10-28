@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Empleado - {{ empleado.nombre }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js para las gráficas de barras -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Librería QRCode.js para generar el código QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/admin">⬅ Volver al Panel de Administración</a>
+            <span class="navbar-text text-white">Perfil de Empleado</span>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        
+        <!-- Fila principal dividida en dos columnas -->
+        <div class="row g-4">
+            
+            <!-- COLUMNA IZQUIERDA: Foto, Datos y Botón de Carnet -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 text-center p-4">
+                    <div class="mb-3">
+                        {% if empleado.foto and empleado.foto != 'default.png' %}
+                            <img src="{{ url_for('static', filename='uploads/' + empleado.foto) }}" class="rounded-circle shadow-sm" width="120" height="120" style="object-fit: cover;" alt="Foto Empleado">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 120px; height: 120px; font-size: 3rem;">
+                                {{ empleado.nombre[0] | upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <h4 class="fw-bold mb-1">{{ empleado.nombre }}</h4>
+                    <p class="text-muted mb-3">Código: <code>{{ empleado.codigo }}</code></p>
+                    
+                    <!-- Formulario para cambiar foto -->
+                    <form id="formFoto" class="mb-3">
+                        <input type="file" id="inputFoto" class="form-control form-control-sm mb-2" accept="image/*" required>
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Actualizar Foto</button>
+                    </form>
+
+                    <hr>
+
+                    <!-- Botón para generar el carnet -->
+                    <button class="btn btn-dark w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCarnet">
+                        🪪 Generar Carnet con QR
+                    </button>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: Promedio e Historial Gráfico -->
+            <div class="col-lg-8">
+                
+                <!-- Tarjeta de Promedio Personal -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">Rendimiento Laboral</h5>
+                            <p class="text-muted small mb-0">Basado en sus jornadas completas</p>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted d-block small">Promedio diario personal</span>
+                            <h3 class="text-primary fw-bold mb-0">{{ promedio_empleado }} hrs</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfica de Barras con Rotación de 7 Días -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="mb-0 fw-bold fs-6">📊 Horas trabajadas (Bloque de 7 días)</h5>
+                        <div>
+                            <a href="/admin/empleado/{{ empleado.id }}?offset={{ offset + 1 }}" class="btn btn-outline-secondary btn-sm">⬅ Semana Ant.</a>
+                            {% if offset > 0 %}
+                                <a href="/admin/empleado/{{ empleado.id }}?offset={{ offset - 1 }}" class="btn btn-outline-primary btn-sm">Semana Sig. ➡</a>
+                            {% else %}
+                                <button class="btn btn-outline-secondary btn-sm" disabled>Actual</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div style="height: 250px;">
+                            <canvas id="graficoHoras"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL PARA MOSTRAR E IMPRIMIR EL CARNET -->
+    <div class="modal fade" id="modalCarnet" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">🪪 Carnet de Identificación</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    
+                    <!-- Diseño del Carnet -->
+                    <div id="zonaCarnet" class="card border shadow mx-auto p-3 text-center bg-white" style="width: 300px; border-radius: 12px;">
+                        <div class="fw-bold text-uppercase text-secondary small mb-2">Control de Asistencia</div>
+                        
+                        <div class="mb-2">
+                            {% if empleado.foto and empleado.foto != 'default.png' %}
+                                <img src="{{ url_for('static', filename='uploads/' + empleado.foto) }}" class="rounded-circle border" width="90" height="90" style="object-fit: cover;" alt="Foto">
+                            {% else %}
+                                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto border" style="width: 90px; height: 90px; font-size: 2rem;">
+                                    {{ empleado.nombre[0] | upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold mb-0 text-dark">{{ empleado.nombre }}</h5>
+                        <p class="text-muted small mb-3">Cód: <strong>{{ empleado.codigo }}</strong></p>
+
+                        <!-- Contenedor donde se generará el Código QR -->
+                        <div id="qrcode" class="d-flex justify-content-center mb-2"></div>
+                        <small class="text-muted" style="font-size: 0.75rem;">Escanee para ponchar</small>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">Imprimir Carnet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (Necesario para el modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script para generar el código QR automáticamente al abrir el modal -->
+    <script>
+        const modalCarnet = document.getElementById('modalCarnet');
+        modalCarnet.addEventListener('shown.bs.modal', function () {
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = ""; // Limpiar por si ya se había generado antes
+            new QRCode(qrContainer, {
+                text: "{{ empleado.codigo }}",
+                width: 128,
+                height: 128,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+
+        // Script para subir la foto vía AJAX
+        document.getElementById('formFoto').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('inputFoto');
+            if(input.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append('foto', input.files[0]);
+
+            try {
+                const response = await fetch('/admin/empleado/{{ empleado.id }}/foto', {
+                    method: 'POST',
+                    body: formData
+                });
+                if(response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error al subir la foto');
+                }
+            } catch (err) {
+                alert('Error de conexión');
+            }
+        });
+    </script>
+
+    <!-- Script de configuración de Chart.js -->
+    <script>
+        const ctx = document.getElementById('graficoHoras').getContext('2d');
+        const diasLabels = {{ dias_grafico | tojson }};
+        const horasData = {{ horas_grafico | tojson }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: diasLabels,
+                datasets: [{
+                    label: 'Horas Trabajadas',
+                    data: horasData,
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Horas'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
