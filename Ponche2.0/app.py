@@ -264,7 +264,8 @@ def registrar_ponche():
         "mensaje": "¡Registro exitoso!",
         "empleado": empleado.nombre,
         "tipo": nuevo_tipo,
-        "hora": datetime.now().strftime("%H:%M:%S")
+        "hora": datetime.now().strftime("%H:%M:%S"),
+        "foto": empleado.foto  # <--- Envía la foto para mostrarla en el ponche
     })
 
 @app.route('/api/empleados/siguiente-codigo', methods=['GET'])

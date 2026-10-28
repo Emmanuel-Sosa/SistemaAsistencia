@@ -8,7 +8,7 @@
 </head>
 <body class="bg-light d-flex flex-column vh-100">
 
-    <!-- Barra Superior -->
+    <!-- Barra Superior limpia -->
     <nav class="navbar shadow-sm bg-white py-3">
         <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
             <span class="navbar-brand mb-0 h1 fw-bold text-dark">⏰ Control de Asistencia</span>
@@ -18,7 +18,7 @@
         </div>
     </nav>
 
-    <!-- Contenido Principal del Ponchador (Movido un poco más hacia arriba con pt-4 pb-5) -->
+    <!-- Contenido Principal del Ponchador -->
     <div class="container d-flex flex-column align-items-center justify-content-start flex-grow-1 pt-5">
         <div class="card shadow-lg border-0 p-5 text-center mx-auto mt-4" style="width: 100%; max-width: 480px; border-radius: 1rem;">
             <h3 class="fw-bold mb-2">Registrar Ponche</h3>
@@ -31,7 +31,8 @@
                 <button type="submit" class="btn btn-primary w-100 py-3 fw-bold text-uppercase" style="letter-spacing: 0.5px;">Registrar</button>
             </form>
 
-            <div id="resultadoPonche" class="mt-3"></div>
+            <!-- Aquí aparecerá la caja verde con la foto y los datos -->
+            <div id="resultadoPonche" class="mt-4"></div>
         </div>
     </div>
 
@@ -78,16 +79,30 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Generar la foto o la inicial del empleado para la izquierda de la caja verde
+                    let elementoFoto = '';
+                    if (data.foto && data.foto !== 'default.png') {
+                        elementoFoto = `<img src="/static/uploads/${data.foto}" class="rounded-circle border shadow-sm flex-shrink-0" width="60" height="60" style="object-fit: cover;" alt="Foto">`;
+                    } else {
+                        let inicial = data.empleado ? data.empleado[0].toUpperCase() : '?';
+                        elementoFoto = `<div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">${inicial}</div>`;
+                    }
+
+                    // Caja verde con diseño de filas/columnas (Foto a la izquierda, textos a la derecha)
                     resDiv.innerHTML = `
-                        <div class="alert alert-success py-3 mb-0 shadow-sm">
-                            <h5 class="fw-bold mb-1">${data.empleado}</h5>
-                            <span class="badge bg-success fs-6">${data.tipo}</span> registrada a las ${data.hora}
+                        <div class="alert alert-success p-3 mb-0 shadow-sm text-start d-flex align-items-center gap-3 border-0">
+                            ${elementoFoto}
+                            <div>
+                                <h5 class="fw-bold mb-1 text-dark">${data.empleado}</h5>
+                                <div><span class="badge bg-success">${data.tipo}</span> <span class="small text-muted">a las ${data.hora}</span></div>
+                            </div>
                         </div>
                     `;
                 } else {
                     resDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0 shadow-sm">${data.error}</div>`;
                 }
                 document.getElementById('codigo').value = '';
+                document.getElementById('codigo').focus();
             } catch (err) {
                 resDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0 shadow-sm">Error de conexión.</div>`;
             }
