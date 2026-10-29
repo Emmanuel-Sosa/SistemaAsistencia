@@ -38,7 +38,6 @@
         color: #ffffff !important;
         border-color: #444 !important;
     }
-    /* CORRECCIÓN DEL PLACEHOLDER EN MODO OSCURO */
     body.dark-mode .form-control::placeholder {
         color: #888888 !important;
         opacity: 1;
@@ -48,7 +47,6 @@
         color: #ffffff !important;
         border-color: #0d6efd !important;
     }
-    /* CORRECCIÓN DE BOTONES OUTLINE EN MODO OSCURO */
     body.dark-mode .btn-outline-dark,
     body.dark-mode .btn-outline-secondary {
         color: #f8f9fa !important;
@@ -125,10 +123,10 @@
             document.body.classList.add('dark-mode');
         }
 
-        document.getElementById('formPonche').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const codigo = document.getElementById('codigo').value.trim();
+        // Función para procesar y registrar el ponche
+        async function ejecutarPonche(codigo) {
             const resDiv = document.getElementById('resultadoPonche');
+            if (!codigo) return;
 
             try {
                 const response = await fetch('/api/ponchar', {
@@ -159,10 +157,33 @@
                 } else {
                     resDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0 shadow-sm">${data.error}</div>`;
                 }
-                document.getElementById('codigo').value = '';
-                document.getElementById('codigo').focus();
+                const inputCodigo = document.getElementById('codigo');
+                if(inputCodigo) {
+                    inputCodigo.value = '';
+                    inputCodigo.focus();
+                }
             } catch (err) {
                 resDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0 shadow-sm">Error de conexión.</div>`;
+            }
+        }
+
+        // Evento del formulario manual
+        document.getElementById('formPonche').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const codigo = document.getElementById('codigo').value.trim();
+            ejecutarPonche(codigo);
+        });
+
+        // Detectar si se abrió la página escaneando un código QR con parámetro en la URL (?codigo=...)
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigoUrl = urlParams.get('codigo');
+            if (codigoUrl) {
+                ejecutarPonche(codigoUrl);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                const inputCodigo = document.getElementById('codigo');
+                if(inputCodigo) inputCodigo.focus();
             }
         });
 
@@ -191,10 +212,5 @@
             }
         });
     </script>
-    <script>
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-</script>
 </body>
 </html>

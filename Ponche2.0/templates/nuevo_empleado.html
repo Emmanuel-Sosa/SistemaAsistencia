@@ -5,16 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Nuevo Empleado</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- QRCode.js para generar el código QR en el carnet -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-    /* Forzar fondo y color de texto general */
     body.dark-mode {
         background-color: #121212 !important;
         color: #e0e0e0 !important;
     }
-    
-    /* Textos y títulos generales */
     body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, 
     body.dark-mode h4, body.dark-mode h5, body.dark-mode h6,
     body.dark-mode span, body.dark-mode strong, body.dark-mode label,
@@ -24,8 +20,6 @@
     body.dark-mode .text-muted {
         color: #b0b0b0 !important;
     }
-
-    /* Tarjetas, contenedores, modales y listas */
     body.dark-mode .card,
     body.dark-mode .modal-content,
     body.dark-mode .list-group-item {
@@ -43,8 +37,6 @@
         background-color: #1e1e1e !important;
         border-top: 1px solid #2c2c2c !important;
     }
-
-    /* Barras de navegación */
     body.dark-mode .navbar {
         background-color: #1e1e1e !important;
         border-bottom: 1px solid #2c2c2c !important;
@@ -52,8 +44,6 @@
     body.dark-mode .navbar-brand {
         color: #f8f9fa !important;
     }
-
-    /* Tablas */
     body.dark-mode .table {
         color: #e0e0e0 !important;
         border-color: #2c2c2c !important;
@@ -75,8 +65,6 @@
         background-color: rgba(255, 255, 255, 0.04) !important;
         color: #e0e0e0 !important;
     }
-
-    /* Formularios e inputs */
     body.dark-mode .form-control {
         background-color: #2a2a2a !important;
         color: #ffffff !important;
@@ -87,8 +75,6 @@
         color: #ffffff !important;
         border-color: #0d6efd !important;
     }
-
-    /* Menús desplegables (Dropdowns) */
     body.dark-mode .dropdown-menu {
         background-color: #1e1e1e !important;
         border: 1px solid #2c2c2c !important;
@@ -106,6 +92,25 @@
     body.dark-mode .btn-close {
         filter: invert(1) grayscale(100%) brightness(200%);
     }
+
+    /* 🖨️ REGLAS DE IMPRESIÓN: Solo imprime el carné */
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #zonaCarnet, #zonaCarnet * {
+            visibility: visible;
+        }
+        #zonaCarnet {
+            position: absolute;
+            left: 50%;
+            top: 40px;
+            transform: translateX(-50%);
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+            width: 320px !important;
+        }
+    }
 </style>
 </head>
 <body class="bg-light d-flex align-items-center justify-content-center vh-100">
@@ -117,7 +122,6 @@
         </div>
 
         <form id="formNuevoEmpleado" enctype="multipart/form-data">
-            <!-- Vista previa del código asignado -->
             <div class="mb-3 bg-white p-3 border rounded text-center">
                 <span class="text-muted small d-block">Código asignado para este empleado:</span>
                 <h3 class="fw-bold text-primary mb-0" id="lblCodigo">Cargando...</h3>
@@ -128,7 +132,6 @@
                 <input type="text" class="form-control" id="nombre" placeholder="Ej. Carlos Mendoza" required>
             </div>
 
-            <!-- Campo opcional para la foto -->
             <div class="mb-3">
                 <label for="foto" class="form-label fw-bold small">Fotografía (Opcional)</label>
                 <input type="file" class="form-control form-control-sm" id="foto" accept="image/*">
@@ -151,23 +154,17 @@
                     <h5 class="modal-title">🪪 Carnet Generado con Éxito</h5>
                 </div>
                 <div class="modal-body text-center p-4">
-                    
-                    <!-- Diseño del Carnet -->
                     <div id="zonaCarnet" class="card border shadow mx-auto p-3 text-center bg-white" style="width: 300px; border-radius: 12px;">
                         <div class="fw-bold text-uppercase text-secondary small mb-2">Control de Asistencia</div>
                         
-                        <div class="mb-2" id="modalFotoContenedor">
-                            <!-- Se inyectará la foto o la inicial dinámicamente -->
-                        </div>
+                        <div class="mb-2" id="modalFotoContenedor"></div>
 
                         <h5 class="fw-bold mb-0 text-dark" id="modalNombre"></h5>
                         <p class="text-muted small mb-3">Cód: <strong id="modalCodigo"></strong></p>
 
-                        <!-- Contenedor del Código QR -->
                         <div id="qrcode" class="d-flex justify-content-center mb-2"></div>
                         <small class="text-muted" style="font-size: 0.75rem;">Escanee para ponchar</small>
                     </div>
-
                 </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">Imprimir Carnet</button>
@@ -177,13 +174,11 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         let modalCarnetInstance = null;
 
-        // Cargar el siguiente código automáticamente al abrir la página
         async function cargarSiguienteCodigo() {
             try {
                 const response = await fetch('/api/empleados/siguiente-codigo');
@@ -200,7 +195,6 @@
 
         cargarSiguienteCodigo();
 
-        // Enviar formulario de registro
         document.getElementById('formNuevoEmpleado').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -223,7 +217,6 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Rellenar datos del modal del carnet
                     document.getElementById('modalNombre').innerText = data.nombre;
                     document.getElementById('modalCodigo').innerText = data.codigo;
                     
@@ -234,10 +227,11 @@
                         fotoContainer.innerHTML = `<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto border" style="width: 90px; height: 90px; font-size: 2rem;">${data.nombre[0].toUpperCase()}</div>`;
                     }
 
-                    // Generar QR
                     document.getElementById('qrcode').innerHTML = "";
+                    const urlPoncheNuevo = window.location.origin + "/?codigo=" + data.codigo;
+
                     new QRCode(document.getElementById('qrcode'), {
-                        text: data.codigo,
+                        text: urlPoncheNuevo,
                         width: 128,
                         height: 128,
                         colorDark : "#000000",
@@ -245,7 +239,6 @@
                         correctLevel : QRCode.CorrectLevel.H
                     });
 
-                    // Mostrar el modal del carnet
                     modalCarnetInstance = new bootstrap.Modal(document.getElementById('modalCarnet'));
                     modalCarnetInstance.show();
 
@@ -261,7 +254,6 @@
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
     }
-</script>
-
+    </script>
 </body>
 </html>

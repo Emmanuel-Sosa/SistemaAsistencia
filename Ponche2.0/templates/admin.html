@@ -44,7 +44,6 @@
         color: #b0b0b0 !important;
     }
 
-    /* CORRECCIÓN DE BOTONES OUTLINE (Como el botón de Configuración Admin) */
     body.dark-mode .btn-outline-dark,
     body.dark-mode .btn-outline-secondary {
         color: #f8f9fa !important;
@@ -236,7 +235,19 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center py-3">
                         <span>📋 Historial Reciente de Ponches</span>
-                        <span class="badge bg-secondary">Últimos registros</span>
+                        <div>
+                            <!-- Menú Desplegable Elegir Formato Reporte General -->
+                            <div class="dropdown d-inline-block me-2">
+                                <button class="btn btn-outline-dark btn-sm fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    📊 Descargar Reporte General
+                                </button>
+                                <ul class="dropdown-menu shadow border-0">
+                                    <li><a class="dropdown-item py-2 text-danger fw-semibold" href="/admin/reporte-general/pdf">📄 Formato PDF (Detallado por páginas)</a></li>
+                                    <li><a class="dropdown-item py-2 text-success fw-semibold" href="/admin/reporte-general/excel">📗 Formato Excel (Con pestañas de resumen)</a></li>
+                                </ul>
+                            </div>
+                            <span class="badge bg-secondary">Últimos registros</span>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -272,69 +283,61 @@
             </div>
 
         </div>
-
     </div>
 
-    <!-- MODAL PARA CAMBIAR CONTRASEÑA -->
+    <!-- Modal para Cambiar Contraseña -->
     <div class="modal fade" id="modalPassword" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-white border-bottom-0 pb-0">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
                     <h5 class="modal-title fw-bold">🔑 Cambiar Contraseña de Administrador</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <form id="formCambiarPassword">
+                <div class="modal-body">
+                    <form id="formPassword">
                         <div class="mb-3">
-                            <label for="passActual" class="form-label small fw-bold text-muted">Contraseña Actual</label>
-                            <input type="password" class="form-control py-2" id="passActual" required>
+                            <label class="form-label">Contraseña Actual</label>
+                            <input type="password" class="form-control" id="pwdActual" required>
                         </div>
                         <div class="mb-3">
-                            <label for="passNueva" class="form-label small fw-bold text-muted">Nueva Contraseña</label>
-                            <input type="password" class="form-control py-2" id="passNueva" required>
+                            <label class="form-label">Nueva Contraseña (mínimo 3 caracteres)</label>
+                            <input type="password" class="form-control" id="pwdNueva" required>
                         </div>
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary py-2 fw-bold">Actualizar Contraseña</button>
-                        </div>
+                        <div id="msgPassword" class="mb-3"></div>
+                        <button type="submit" class="btn btn-primary w-100">Actualizar Contraseña</button>
                     </form>
-                    <div id="alertaPassword" class="mt-3 text-center small"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Script para Modo Oscuro y Cambio de Contraseña -->
     <script>
-        const currentTheme = localStorage.getItem('theme');
+        // Lógica para el Modo Oscuro
         const btnToggleTheme = document.getElementById('btnToggleTheme');
+        const body = document.body;
 
-        if (currentTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            btnToggleTheme.innerHTML = '☀️ Cambiar a Modo Claro';
+        // Recordar preferencia guardada
+        if (localStorage.getItem('darkMode') === 'true') {
+            body.classList.add('dark-mode');
+            btnToggleTheme.textContent = '☀️ Cambiar a Modo Claro';
         }
 
-        btnToggleTheme.addEventListener('click', function(e) {
+        btnToggleTheme.addEventListener('click', (e) => {
             e.preventDefault();
-            document.body.classList.toggle('dark-mode');
-            
-            let theme = 'light';
-            if (document.body.classList.contains('dark-mode')) {
-                theme = 'dark';
-                btnToggleTheme.innerHTML = '☀️ Cambiar a Modo Claro';
-            } else {
-                btnToggleTheme.innerHTML = '🌙 Cambiar a Modo Oscuro';
-            }
-            localStorage.setItem('theme', theme);
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            btnToggleTheme.textContent = isDark ? '☀️ Cambiar a Modo Claro' : '🌙 Cambiar a Modo Oscuro';
         });
 
-        document.getElementById('formCambiarPassword').addEventListener('submit', async function(e) {
+        // Lógica de cambio de contraseña vía AJAX
+        document.getElementById('formPassword').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const actual = document.getElementById('passActual').value;
-            const nueva = document.getElementById('passNueva').value;
-            const alerta = document.getElementById('alertaPassword');
+            const actual = document.getElementById('pwdActual').value;
+            const nueva = document.getElementById('pwdNueva').value;
+            const msgDiv = document.getElementById('msgPassword');
 
             try {
                 const response = await fetch('/api/cambiar-password', {
@@ -343,26 +346,17 @@
                     body: JSON.stringify({ actual, nueva })
                 });
                 const data = await response.json();
-
+                
                 if (response.ok) {
-                    alerta.innerHTML = `<span class="text-success fw-bold">${data.mensaje}</span>`;
-                    document.getElementById('formCambiarPassword').reset();
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1200);
+                    msgDiv.innerHTML = `<div class="alert alert-success py-2 mb-0">${data.mensaje}</div>`;
+                    setTimeout(() => { location.reload(); }, 1500);
                 } else {
-                    alerta.innerHTML = `<span class="text-danger fw-bold">${data.error}</span>`;
+                    msgDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0">${data.error}</div>`;
                 }
             } catch (err) {
-                alerta.innerHTML = `<span class="text-danger fw-bold">Error de conexión.</span>`;
+                msgDiv.innerHTML = `<div class="alert alert-danger py-2 mb-0">Error de conexión.</div>`;
             }
         });
     </script>
-    <script>
-    if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-    }
-</script>
-
 </body>
 </html>
